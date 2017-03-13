@@ -157,7 +157,7 @@ Account to authenticate.')
     choices=list(range(1,101)),
     default=0, # default of 0 means use per action default
     help='Optional: Sets the number of operations to perform at once.')
-  parser.add_argument('--noresume', 
+  parser.add_argument('--noresume',
     action='store_true',
     help='Optional: On restores, start from beginning. Default is to resume \
 where last restore left off.')
@@ -313,59 +313,59 @@ https://www.googleapis.com/auth/gmail.labels',
     http = httplib2.Http(
       disable_ssl_certificate_validation=disable_ssl_certificate_validation)
 
-def doGYBCheckForUpdates():
-  import urllib.request, urllib.error, urllib.parse, calendar
-  no_update_check_file = getProgPath()+'noupdatecheck.txt'
-  last_update_check_file = getProgPath()+'lastcheck.txt'
-  if os.path.isfile(no_update_check_file): return
-  try:
-    current_version = float(__version__)
-  except ValueError:
-    return
-  if os.path.isfile(last_update_check_file):
-    f = open(last_update_check_file, 'r')
-    last_check_time = int(f.readline())
-    f.close()
-  else:
-    last_check_time = 0
-  now_time = calendar.timegm(time.gmtime())
-  one_week_ago_time = now_time - 604800
-  if last_check_time > one_week_ago_time: return
-  try:
-    checkUrl = 'https://gyb-update.appspot.com/latest-version.txt?v=%s'
-    c = urllib.request.urlopen(checkUrl % (__version__,))
-    try:
-      latest_version = float(c.read())
-    except ValueError:
-      return
-    if latest_version <= current_version:
-      f = open(last_update_check_file, 'w')
-      f.write(str(now_time))
-      f.close()
-      return
-    announceUrl = 'https://gyb-update.appspot.com/\
-latest-version-announcement.txt?v=%s'
-    a = urllib.request.urlopen(announceUrl % (__version__,))
-    announcement = a.read().decode("utf-8")
-    sys.stderr.write('\nThere\'s a new version of GYB!!!\n\n')
-    sys.stderr.write(announcement)
-    visit_gyb = input("\n\nHit Y to visit the GYB website and download \
-the latest release. Hit Enter to just continue with this boring old version.\
- GYB won't bother you with this announcement for 1 week or you can create a \
-file named %s and GYB won't ever check for updates: " % no_update_check_file)
-    if visit_gyb.lower() == 'y':
-      import webbrowser
-      webbrowser.open(__website__)
-      print('GYB is now exiting so that you can overwrite this old version \
-with the latest release')
-      sys.exit(0)
-    f = open(last_update_check_file, 'w')
-    f.write(str(now_time))
-    f.close()
-  except urllib.error.HTTPError:
-    return
-  except urllib.error.URLError:
-    return
+# def doGYBCheckForUpdates():
+#   import urllib.request, urllib.error, urllib.parse, calendar
+#   no_update_check_file = getProgPath()+'noupdatecheck.txt'
+#   last_update_check_file = getProgPath()+'lastcheck.txt'
+#   if os.path.isfile(no_update_check_file): return
+#   try:
+#     current_version = float(__version__)
+#   except ValueError:
+#     return
+#   if os.path.isfile(last_update_check_file):
+#     f = open(last_update_check_file, 'r')
+#     last_check_time = int(f.readline())
+#     f.close()
+#   else:
+#     last_check_time = 0
+#   now_time = calendar.timegm(time.gmtime())
+#   one_week_ago_time = now_time - 604800
+#   if last_check_time > one_week_ago_time: return
+#   try:
+#     checkUrl = 'https://gyb-update.appspot.com/latest-version.txt?v=%s'
+#     c = urllib.request.urlopen(checkUrl % (__version__,))
+#     try:
+#       latest_version = float(c.read())
+#     except ValueError:
+#       return
+#     if latest_version <= current_version:
+#       f = open(last_update_check_file, 'w')
+#       f.write(str(now_time))
+#       f.close()
+#       return
+#     announceUrl = 'https://gyb-update.appspot.com/\
+# latest-version-announcement.txt?v=%s'
+#     a = urllib.request.urlopen(announceUrl % (__version__,))
+#     announcement = a.read().decode("utf-8")
+#     sys.stderr.write('\nThere\'s a new version of GYB!!!\n\n')
+#     sys.stderr.write(announcement)
+#     visit_gyb = input("\n\nHit Y to visit the GYB website and download \
+# the latest release. Hit Enter to just continue with this boring old version.\
+#  GYB won't bother you with this announcement for 1 week or you can create a \
+# file named %s and GYB won't ever check for updates: " % no_update_check_file)
+#     if visit_gyb.lower() == 'y':
+#       import webbrowser
+#       webbrowser.open(__website__)
+#       print('GYB is now exiting so that you can overwrite this old version \
+# with the latest release')
+#       sys.exit(0)
+#     f = open(last_update_check_file, 'w')
+#     f.write(str(now_time))
+#     f.close()
+#   except urllib.error.HTTPError:
+#     return
+#   except urllib.error.URLError:
+#     return
 
 def getAPIVer(api):
   if api == 'oauth2':
@@ -397,7 +397,7 @@ def buildGAPIObject(api):
   if credentials is None or credentials.invalid:
     doRequestOAuth()
     credentials = storage.get()
-  credentials.user_agent = getGYBVersion(' | ') 
+  credentials.user_agent = getGYBVersion(' | ')
   disable_ssl_certificate_validation = False
   if os.path.isfile(getProgPath()+'noverifyssl.txt'):
     disable_ssl_certificate_validation = True
@@ -571,8 +571,8 @@ def callGAPIpages(service, function, items='items',
 def message_is_backed_up(message_num, sqlcur, sqlconn, backup_folder):
     try:
       sqlcur.execute('''
-         SELECT message_filename FROM uids NATURAL JOIN messages
-                where uid = ?''', ((message_num),))
+         SELECT message_uid FROM messages
+                where message_uid = ?''', ((message_num),))
     except sqlite3.OperationalError as e:
       if e.message == 'no such table: messages':
         print("\n\nError: your backup database file appears to be corrupted.")
@@ -581,15 +581,15 @@ def message_is_backed_up(message_num, sqlcur, sqlconn, backup_folder):
       sys.exit(8)
     sqlresults = sqlcur.fetchall()
     for x in sqlresults:
-      filename = x[0]
-      if os.path.isfile(os.path.join(backup_folder, filename)):
+      mess_uid = x[0]
+      if len(mess_uid) > 0:
         return True
     return False
 
 def get_db_settings(sqlcur):
   try:
     sqlcur.execute('SELECT name, value FROM settings')
-    db_settings = dict(sqlcur) 
+    db_settings = dict(sqlcur)
     return db_settings
   except sqlite3.OperationalError as e:
     if e.message == 'no such table: settings':
@@ -597,7 +597,7 @@ def get_db_settings(sqlcur):
 database schema. Your backup folder database does not have a version."
  % (__db_schema_version__))
       sys.exit(6)
-    else: 
+    else:
       print("%s" % e)
 
 def check_db_settings(db_settings, action, user_email_address):
@@ -618,65 +618,65 @@ account that it was created with for incremental backups. You specified the\
  %s account" % (db_settings['email_address'], user_email_address))
       sys.exit(5)
 
-def convertDB(sqlconn, uidvalidity, oldversion):
-  print("Converting database")
-  try:
-    with sqlconn:
-      if oldversion < '3':
-        # Convert to schema 3
-        sqlconn.executescript('''
-          BEGIN;
-          CREATE TABLE uids 
-              (message_num INTEGER, uid INTEGER PRIMARY KEY); 
-          INSERT INTO uids (uid, message_num) 
-               SELECT message_num as uid, message_num FROM messages;
-          CREATE INDEX labelidx ON labels (message_num);
-          CREATE INDEX flagidx ON flags (message_num);
-        ''')
-      if oldversion < '4':
-        # Convert to schema 4
-        sqlconn.execute('''
-          ALTER TABLE messages ADD COLUMN rfc822_msgid TEXT;
-        ''')
-      if oldversion < '5':
-        # Convert to schema 5
-        sqlconn.executescript('''
-          DROP INDEX labelidx;
-          DROP INDEX flagidx;
-          CREATE UNIQUE INDEX labelidx ON labels (message_num, label);
-          CREATE UNIQUE INDEX flagidx ON flags (message_num, flag);
-        ''')
-      if oldversion < '6':
-        # Convert to schema 6
-        getMessageIDs(sqlconn, options.local_folder)
-        rebuildUIDTable(sqlconn)
-      sqlconn.executemany('REPLACE INTO settings (name, value) VALUES (?,?)',
-                        (('uidvalidity',uidvalidity), 
-                         ('db_version', __db_schema_version__)) )   
-      sqlconn.commit()
-  except sqlite3.OperationalError as e:
-      print("Conversion error: %s" % e.message)
+# def convertDB(sqlconn, uidvalidity, oldversion):
+#   print("Converting database")
+#   try:
+#     with sqlconn:
+#       if oldversion < '3':
+#         # Convert to schema 3
+#         sqlconn.executescript('''
+#           BEGIN;
+#           CREATE TABLE uids
+#               (message_num INTEGER, uid INTEGER PRIMARY KEY);
+#           INSERT INTO uids (uid, message_num)
+#                SELECT message_num as uid, message_num FROM messages;
+#           CREATE INDEX labelidx ON labels (message_num);
+#           CREATE INDEX flagidx ON flags (message_num);
+#         ''')
+#       if oldversion < '4':
+#         # Convert to schema 4
+#         sqlconn.execute('''
+#           ALTER TABLE messages ADD COLUMN rfc822_msgid TEXT;
+#         ''')
+#       if oldversion < '5':
+#         # Convert to schema 5
+#         sqlconn.executescript('''
+#           DROP INDEX labelidx;
+#           DROP INDEX flagidx;
+#           CREATE UNIQUE INDEX labelidx ON labels (message_num, label);
+#           CREATE UNIQUE INDEX flagidx ON flags (message_num, flag);
+#         ''')
+#       if oldversion < '6':
+#         # Convert to schema 6
+#         getMessageIDs(sqlconn, options.local_folder)
+#         rebuildUIDTable(sqlconn)
+#       sqlconn.executemany('REPLACE INTO settings (name, value) VALUES (?,?)',
+#                         (('uidvalidity',uidvalidity),
+#                          ('db_version', __db_schema_version__)) )
+#       sqlconn.commit()
+#   except sqlite3.OperationalError as e:
+#       print("Conversion error: %s" % e.message)
+#
+#   print("GYB database converted to version %s" % __db_schema_version__)
 
-  print("GYB database converted to version %s" % __db_schema_version__)
+# def getMessageIDs (sqlconn, backup_folder):
+#   sqlcur = sqlconn.cursor()
+#   header_parser = email.parser.HeaderParser()
+#   for message_num, filename in sqlconn.execute('''
+#                SELECT message_num, message_filename FROM messages
+#                       WHERE rfc822_msgid IS NULL'''):
+#     message_full_filename = os.path.join(backup_folder, filename)
+#     if os.path.isfile(message_full_filename):
+#       f = open(message_full_filename, 'r')
+#       msgid = header_parser.parse(f, True).get('message-id') or '<DummyMsgID>'
+#       f.close()
+#       sqlcur.execute(
+#           'UPDATE messages SET rfc822_msgid = ? WHERE message_num = ?',
+#                      (msgid, message_num))
+#   sqlconn.commit()
 
-def getMessageIDs (sqlconn, backup_folder):   
-  sqlcur = sqlconn.cursor()
-  header_parser = email.parser.HeaderParser()
-  for message_num, filename in sqlconn.execute('''
-               SELECT message_num, message_filename FROM messages 
-                      WHERE rfc822_msgid IS NULL'''):
-    message_full_filename = os.path.join(backup_folder, filename)
-    if os.path.isfile(message_full_filename):
-      f = open(message_full_filename, 'r')
-      msgid = header_parser.parse(f, True).get('message-id') or '<DummyMsgID>'
-      f.close()
-      sqlcur.execute(
-          'UPDATE messages SET rfc822_msgid = ? WHERE message_num = ?',
-                     (msgid, message_num))
-  sqlconn.commit()
- 
-def rebuildUIDTable(sqlconn):
-  pass
+# def rebuildUIDTable(sqlconn):
+#   pass
 
 suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 def humansize(file_path):
@@ -712,15 +712,19 @@ def rewrite_line(mystring):
 
 def initializeDB(sqlcur, sqlconn, email):
   sqlcur.executescript('''
-   CREATE TABLE messages(message_num INTEGER PRIMARY KEY, 
-                         message_filename TEXT, 
-                         message_internaldate TIMESTAMP);
+   CREATE TABLE messages(message_num INTEGER PRIMARY KEY,
+                         message_internaldate TIMESTAMP,
+                         message_uid TEXT,
+                         send_from TEXT,
+                         send_to TEXT,
+                         subject TEXT,
+                         body TEXT);
    CREATE TABLE labels (message_num INTEGER, label TEXT);
    CREATE TABLE uids (message_num INTEGER, uid TEXT PRIMARY KEY);
    CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);
    CREATE UNIQUE INDEX labelidx ON labels (message_num, label);
   ''')
-  sqlcur.executemany('INSERT INTO settings (name, value) VALUES (?, ?)', 
+  sqlcur.executemany('INSERT INTO settings (name, value) VALUES (?, ?)',
          (('email_address', email),
           ('db_version', __db_schema_version__)))
   sqlconn.commit()
@@ -802,13 +806,13 @@ def refresh_message(request_id, response, exception):
       sqlcur.executemany(
            'INSERT INTO current_labels (label) VALUES (?)',
               ((label,) for label in labels))
-      sqlcur.execute("""DELETE FROM labels where message_num = 
+      sqlcur.execute("""DELETE FROM labels where message_num =
                    (SELECT message_num from uids where uid = ?)
                     AND label NOT IN current_labels""", ((response['id']),))
-      sqlcur.execute("""INSERT INTO labels (message_num, label) 
-            SELECT message_num, label from uids, current_labels 
-               WHERE uid = ? AND label NOT IN 
-               (SELECT label FROM labels 
+      sqlcur.execute("""INSERT INTO labels (message_num, label)
+            SELECT message_num, label from uids, current_labels
+               WHERE uid = ? AND label NOT IN
+               (SELECT label FROM labels
                   WHERE message_num = uids.message_num)""",
                   ((response['id']),))
 
@@ -855,28 +859,42 @@ def backup_message(request_id, response, exception):
     message_time = int(response['internalDate'])/1000
     message_date = time.gmtime(message_time)
     time_for_sqlite = datetime.datetime.fromtimestamp(message_time)
-    message_rel_path = os.path.join(str(message_date.tm_year),
-                                    str(message_date.tm_mon),
-                                    str(message_date.tm_mday))
-    message_rel_filename = os.path.join(message_rel_path,
-                                        message_file_name)
-    message_full_path = os.path.join(options.local_folder,
-                                     message_rel_path)
-    message_full_filename = os.path.join(options.local_folder,
-                                     message_rel_filename)
-    if not os.path.isdir(message_full_path):
-      os.makedirs(message_full_path)
-    f = open(message_full_filename, 'wb')
+    #message_rel_path = os.path.join(str(message_date.tm_year),
+    #                                str(message_date.tm_mon),
+    #                                str(message_date.tm_mday))
+    #message_rel_filename = os.path.join(message_rel_path,
+    #                                    message_file_name)
+    #message_full_path = os.path.join(options.local_folder,
+    #                                 message_rel_path)
+    #message_full_filename = os.path.join(options.local_folder,
+    #                                 message_rel_filename)
+    #if not os.path.isdir(message_full_path):
+    #  os.makedirs(message_full_path)
+    #f = open(message_full_filename, 'wb')
     raw_message = str(response['raw'])
+
+    #body_message = base64.urlsafe_b64decode(body_message_b64)
     full_message = base64.urlsafe_b64decode(raw_message)
-    f.write(full_message)
-    f.close()
+    email_parser = email.parser.Parser()
+    #message = email_parser.parsestr(full_message, False)
+    message = email.message_from_bytes(full_message)
+    payload = message.get_payload(decode=True)
+    message_from = message['from']
+    message_to = message['to']
+    #f.write(full_message)
+    #f.close()
     sqlcur.execute("""
              INSERT INTO messages (
-                         message_filename, 
-                         message_internaldate) VALUES (?, ?)""",
-                        (message_rel_filename,
-                         time_for_sqlite))
+                         message_internaldate,
+                         message_uid,
+                         send_from,
+                         send_to,
+                         body) VALUES (?, ?, ?, ?, ?)""",
+                        (time_for_sqlite,
+                        response['id'],
+                        message_from,
+                        message_to,
+                         payload))
     message_num = sqlcur.lastrowid
     sqlcur.execute("""
              REPLACE INTO uids (message_num, uid) VALUES (?, ?)""",
@@ -981,7 +999,7 @@ def main(argv):
   # Do we need to initialize a new database?
   newDB = (not os.path.isfile(sqldbfile)) and \
     (options.action in ['backup', 'restore-mbox'])
-  
+
   # If we're not doing a estimate or if the db file actually exists we open it
   # (creates db if it doesn't exist)
   if options.action not in ['count', 'purge', 'purge-labels',
@@ -998,15 +1016,15 @@ def main(argv):
         initializeDB(sqlcur, sqlconn, options.email)
       db_settings = get_db_settings(sqlcur)
       check_db_settings(db_settings, options.action, options.email)
-      if options.action not in ['restore', 'restore-group', 'restore-mbox']:
-        if db_settings['db_version'] <  __db_schema_version__:
-          convertDB(sqlconn, db_settings['db_version'])
-          db_settings = get_db_settings(sqlcur)
-        if options.action == 'reindex':
-          getMessageIDs(sqlconn, options.local_folder)
-          rebuildUIDTable(sqlconn)
-          sqlconn.commit()
-          sys.exit(0)
+    #   if options.action not in ['restore', 'restore-group', 'restore-mbox']:
+    #     # if db_settings['db_version'] <  __db_schema_version__:
+    #     #   convertDB(sqlconn, db_settings['db_version'])
+    #     #   db_settings = get_db_settings(sqlcur)
+    #     if options.action == 'reindex':
+    #       getMessageIDs(sqlconn, options.local_folder)
+    #       rebuildUIDTable(sqlconn)
+    #       sqlconn.commit()
+    #       sys.exit(0)
 
   # BACKUP #
   if options.action == 'backup':
@@ -1054,7 +1072,7 @@ def main(argv):
       rewrite_line("backed up %s of %s messages" %
         (backed_up_messages, backup_count))
     print("\n")
- 
+
     if not options.refresh:
       messages_to_refresh = []
     refreshed_messages = 0
@@ -1084,332 +1102,332 @@ def main(argv):
     print("\n")
 
   # RESTORE #
-  elif options.action == 'restore':
-    if options.batch_size == 0:
-      options.batch_size = 10
-    resumedb = os.path.join(options.local_folder, 
-                            "%s-restored.sqlite" % options.email)
-    if options.noresume:
-      try:
-        os.remove(resumedb)
-      except OSError:
-        pass
-      except IOError:
-        pass
-    sqlcur.execute('ATTACH ? as resume', (resumedb,))
-    sqlcur.executescript('''CREATE TABLE IF NOT EXISTS resume.restored_messages 
-                        (message_num INTEGER PRIMARY KEY); 
-                        CREATE TEMP TABLE skip_messages (message_num INTEGER \
-                          PRIMARY KEY);''')
-    sqlcur.execute('''INSERT INTO skip_messages SELECT message_num from \
-      restored_messages''')
-    sqlcur.execute('''SELECT message_num, message_internaldate, \
-      message_filename FROM messages
-                      WHERE message_num NOT IN skip_messages ORDER BY \
-                      message_internaldate DESC''') # All messages
-
-    restore_serv = gmail.users().messages()
-    if options.fast_restore:
-      restore_func = 'insert'
-      restore_params = {'internalDateSource': 'dateHeader'}
-    else:
-      restore_func = 'import_'
-      restore_params = {'neverMarkSpam': True}
-    restore_method = getattr(restore_serv, restore_func)
-    messages_to_restore_results = sqlcur.fetchall()
-    restore_count = len(messages_to_restore_results)
-    current = 0
-    gbatch = googleapiclient.http.BatchHttpRequest()
-    max_batch_bytes = 8 * 1024 * 1024
-    current_batch_bytes = 5000 # accounts for metadata
-    largest_in_batch = 0
-    for x in messages_to_restore_results:
-      current += 1
-      message_filename = x[2]
-      message_num = x[0]
-      if not os.path.isfile(os.path.join(options.local_folder,
-        message_filename)):
-        print('WARNING! file %s does not exist for message %s'
-          % (os.path.join(options.local_folder, message_filename),
-            message_num))
-        print('  this message will be skipped.')
-        continue
-      f = open(os.path.join(options.local_folder, message_filename), 'rb')
-      full_message = f.read()
-      f.close()
-      labels = []
-      if not options.strip_labels:
-        sqlcur.execute('SELECT DISTINCT label FROM labels WHERE message_num \
-          = ?', (message_num,))
-        labels_results = sqlcur.fetchall()
-        for l in labels_results:
-          labels.append(l[0])
-      if options.label_restored:
-        for restore_label in options.label_restored:
-          labels.append(restore_label)
-      labelIds = labelsToLabelIds(labels)
-      body = {'labelIds': labelIds}
-      b64_message_size = (len(full_message)/3) * 4
-      if b64_message_size > 1 * 1024 * 1024 or options.batch_size == 1:
-        # don't batch/raw >1mb messages, just do single
-        rewrite_line('restoring single large message (%s/%s)' %
-          (current, restore_count))
-        # Note resumable=True is important here, it prevents errors on (bad)
-        # messages that should be ASCII but contain extended chars.
-        # What's that? No, no idea why
-        media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
-          mimetype='message/rfc822', resumable=True, chunksize=chunksize)
-        try:
-          response = callGAPI(service=restore_serv, function=restore_func,
-            userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
-            deleted=options.vault, soft_errors=True, **restore_params)
-          exception = None
-        except googleapiclient.errors.HttpError as e:
-          response = None
-          exception = e
-        restored_message(request_id=str(message_num), response=response,
-          exception=exception)
-        rewrite_line('restored single large message (%s/%s)' % (current,
-          restore_count))
-        continue
-      if b64_message_size > largest_in_batch:
-        largest_in_batch = b64_message_size
-      raw_message = base64.urlsafe_b64encode(full_message).decode('utf-8')
-      body['raw'] = raw_message
-      current_batch_bytes += len(raw_message)
-      for labelId in labelIds:
-        current_batch_bytes += len(labelId)
-      if len(gbatch._order) > 0 and current_batch_bytes > max_batch_bytes:
-        # this message would put us over max, execute current batch first
-        rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
-          current, restore_count))
-        callGAPI(gbatch, None, soft_errors=True)
-        gbatch = googleapiclient.http.BatchHttpRequest()
-        sqlconn.commit()
-        current_batch_bytes = 5000
-        largest_in_batch = 0
-      gbatch.add(restore_method(userId='me',
-        body=body, fields='id', deleted=options.vault,
-        **restore_params), callback=restored_message,
-          request_id=str(message_num))
-      if len(gbatch._order) == options.batch_size:
-        rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
-          current, restore_count))
-        callGAPI(gbatch, None, soft_errors=True)
-        gbatch = googleapiclient.http.BatchHttpRequest()
-        sqlconn.commit()
-        current_batch_bytes = 5000
-        largest_in_batch = 0
-    if len(gbatch._order) > 0:
-      rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
-        current, restore_count))
-      callGAPI(gbatch, None, soft_errors=True)
-      sqlconn.commit()
-    print("\n")
-    sqlconn.execute('DETACH resume')
-    sqlconn.commit()
+  # elif options.action == 'restore':
+  #   if options.batch_size == 0:
+  #     options.batch_size = 10
+  #   resumedb = os.path.join(options.local_folder,
+  #                           "%s-restored.sqlite" % options.email)
+  #   if options.noresume:
+  #     try:
+  #       os.remove(resumedb)
+  #     except OSError:
+  #       pass
+  #     except IOError:
+  #       pass
+  #   sqlcur.execute('ATTACH ? as resume', (resumedb,))
+  #   sqlcur.executescript('''CREATE TABLE IF NOT EXISTS resume.restored_messages
+  #                       (message_num INTEGER PRIMARY KEY);
+  #                       CREATE TEMP TABLE skip_messages (message_num INTEGER \
+  #                         PRIMARY KEY);''')
+  #   sqlcur.execute('''INSERT INTO skip_messages SELECT message_num from \
+  #     restored_messages''')
+  #   sqlcur.execute('''SELECT message_num, message_internaldate, \
+  #     message_filename FROM messages
+  #                     WHERE message_num NOT IN skip_messages ORDER BY \
+  #                     message_internaldate DESC''') # All messages
+  #
+  #   restore_serv = gmail.users().messages()
+  #   if options.fast_restore:
+  #     restore_func = 'insert'
+  #     restore_params = {'internalDateSource': 'dateHeader'}
+  #   else:
+  #     restore_func = 'import_'
+  #     restore_params = {'neverMarkSpam': True}
+  #   restore_method = getattr(restore_serv, restore_func)
+  #   messages_to_restore_results = sqlcur.fetchall()
+  #   restore_count = len(messages_to_restore_results)
+  #   current = 0
+  #   gbatch = googleapiclient.http.BatchHttpRequest()
+  #   max_batch_bytes = 8 * 1024 * 1024
+  #   current_batch_bytes = 5000 # accounts for metadata
+  #   largest_in_batch = 0
+  #   for x in messages_to_restore_results:
+  #     current += 1
+  #     message_filename = x[2]
+  #     message_num = x[0]
+  #     if not os.path.isfile(os.path.join(options.local_folder,
+  #       message_filename)):
+  #       print('WARNING! file %s does not exist for message %s'
+  #         % (os.path.join(options.local_folder, message_filename),
+  #           message_num))
+  #       print('  this message will be skipped.')
+  #       continue
+  #     f = open(os.path.join(options.local_folder, message_filename), 'rb')
+  #     full_message = f.read()
+  #     f.close()
+  #     labels = []
+  #     if not options.strip_labels:
+  #       sqlcur.execute('SELECT DISTINCT label FROM labels WHERE message_num \
+  #         = ?', (message_num,))
+  #       labels_results = sqlcur.fetchall()
+  #       for l in labels_results:
+  #         labels.append(l[0])
+  #     if options.label_restored:
+  #       for restore_label in options.label_restored:
+  #         labels.append(restore_label)
+  #     labelIds = labelsToLabelIds(labels)
+  #     body = {'labelIds': labelIds}
+  #     b64_message_size = (len(full_message)/3) * 4
+  #     if b64_message_size > 1 * 1024 * 1024 or options.batch_size == 1:
+  #       # don't batch/raw >1mb messages, just do single
+  #       rewrite_line('restoring single large message (%s/%s)' %
+  #         (current, restore_count))
+  #       # Note resumable=True is important here, it prevents errors on (bad)
+  #       # messages that should be ASCII but contain extended chars.
+  #       # What's that? No, no idea why
+  #       media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
+  #         mimetype='message/rfc822', resumable=True, chunksize=chunksize)
+  #       try:
+  #         response = callGAPI(service=restore_serv, function=restore_func,
+  #           userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
+  #           deleted=options.vault, soft_errors=True, **restore_params)
+  #         exception = None
+  #       except googleapiclient.errors.HttpError as e:
+  #         response = None
+  #         exception = e
+  #       restored_message(request_id=str(message_num), response=response,
+  #         exception=exception)
+  #       rewrite_line('restored single large message (%s/%s)' % (current,
+  #         restore_count))
+  #       continue
+  #     if b64_message_size > largest_in_batch:
+  #       largest_in_batch = b64_message_size
+  #     raw_message = base64.urlsafe_b64encode(full_message).decode('utf-8')
+  #     body['raw'] = raw_message
+  #     current_batch_bytes += len(raw_message)
+  #     for labelId in labelIds:
+  #       current_batch_bytes += len(labelId)
+  #     if len(gbatch._order) > 0 and current_batch_bytes > max_batch_bytes:
+  #       # this message would put us over max, execute current batch first
+  #       rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
+  #         current, restore_count))
+  #       callGAPI(gbatch, None, soft_errors=True)
+  #       gbatch = googleapiclient.http.BatchHttpRequest()
+  #       sqlconn.commit()
+  #       current_batch_bytes = 5000
+  #       largest_in_batch = 0
+  #     gbatch.add(restore_method(userId='me',
+  #       body=body, fields='id', deleted=options.vault,
+  #       **restore_params), callback=restored_message,
+  #         request_id=str(message_num))
+  #     if len(gbatch._order) == options.batch_size:
+  #       rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
+  #         current, restore_count))
+  #       callGAPI(gbatch, None, soft_errors=True)
+  #       gbatch = googleapiclient.http.BatchHttpRequest()
+  #       sqlconn.commit()
+  #       current_batch_bytes = 5000
+  #       largest_in_batch = 0
+  #   if len(gbatch._order) > 0:
+  #     rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
+  #       current, restore_count))
+  #     callGAPI(gbatch, None, soft_errors=True)
+  #     sqlconn.commit()
+  #   print("\n")
+  #   sqlconn.execute('DETACH resume')
+  #   sqlconn.commit()
 
  # RESTORE-MBOX #
-  elif options.action == 'restore-mbox':
-    if options.batch_size == 0:
-      options.batch_size = 10
-    resumedb = os.path.join(options.local_folder,
-                            "%s-restored.sqlite" % options.email)
-    if options.noresume:
-      try:
-        os.remove(resumedb)
-      except OSError:
-        pass
-      except IOError:
-        pass
-    sqlcur.execute('ATTACH ? as mbox_resume', (resumedb,))
-    sqlcur.executescript('''CREATE TABLE
-                        IF NOT EXISTS mbox_resume.restored_messages
-                        (message_num TEXT PRIMARY KEY)''')
-    sqlcur.execute('SELECT message_num FROM mbox_resume.restored_messages')
-    messages_to_skip_results = sqlcur.fetchall()
-    messages_to_skip = []
-    for a_message in messages_to_skip_results:
-      messages_to_skip.append(a_message[0])
-    current_batch_bytes = 5000
-    gbatch = googleapiclient.http.BatchHttpRequest()
-    restore_serv = gmail.users().messages()
-    if options.fast_restore:
-      restore_func = 'insert'
-      restore_params = {'internalDateSource': 'dateHeader'}
-    else:
-      restore_func = 'import_'
-      restore_params = {'neverMarkSpam': True}
-    restore_method = getattr(restore_serv, restore_func)
-    max_batch_bytes = 8 * 1024 * 1024
-    for path, subdirs, files in os.walk(options.local_folder):
-      for filename in files:
-        if filename[-4:].lower() != '.mbx' and \
-          filename[-5:].lower() != '.mbox':
-          continue
-        file_path = '%s%s%s' % (path, path_divider, filename)
-        print("\nRestoring from %s file %s..." % (humansize(file_path), file_path))
-        print("large files may take some time to open.")
-        mbox = mailbox.mbox(file_path)
-        restore_count = len(list(mbox.items()))
-        current = 0
-        for message in mbox:
-          current += 1
-          message_marker = '%s-%s' % (file_path, current)
-          # shorten request_id to prevent content-id errors
-          request_id = hashlib.md5(message_marker.encode('utf-8')).hexdigest()[:25]
-          if request_id in messages_to_skip:
-            continue
-          labels = message['X-Gmail-Labels']
-          if labels != None and labels != '' and not options.strip_labels:
-            mybytes, encoding = email.header.decode_header(labels)[0]
-            if encoding != None:
-              try:
-                labels = mybytes.decode(encoding)
-              except UnicodeDecodeError:
-                pass
-            labels = labels.split(',')
-          else:
-            labels = []
-          if options.label_restored:
-            for restore_label in options.label_restored:
-              labels.append(restore_label)
-          cased_labels = []
-          for label in labels:
-            if label.lower() in reserved_labels:
-              label = label.upper()
-              if label in ['CHAT', 'CHATS']:
-                cased_labels.append('Chats_restored')
-                continue
-              if label == 'DRAFTS':
-                label = u'DRAFT' 
-              cased_labels.append(label)
-            else:
-              cased_labels.append(label)
-          labelIds = labelsToLabelIds(cased_labels)
-          del message['X-Gmail-Labels']
-          del message['X-GM-THRID']
-          rewrite_line(" message %s of %s" % (current, restore_count))
-          full_message = message.as_bytes()
-          body = {'labelIds': labelIds}
-          b64_message_size = (len(full_message)/3) * 4
-          if b64_message_size > 1 * 1024 * 1024:
-            # don't batch/raw >1mb messages, just do single
-            rewrite_line(' restoring single large message (%s/%s)' %
-              (current, restore_count))
-            media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
-              mimetype='message/rfc822', resumable=True, chunksize=chunksize)
-            try:
-              response = callGAPI(service=restore_serv, function=restore_func,
-                userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
-                deleted=options.vault, soft_errors=True, **restore_params)
-              if response == None:
-                continue
-              exception = None
-            except googleapiclient.errors.HttpError as e:
-              response = None
-              exception = e
-            restored_message(request_id=request_id, response=response,
-              exception=None)
-            rewrite_line(' restored single large message (%s/%s)' %
-              (current, restore_count))
-            continue
-          raw_message = base64.urlsafe_b64encode(full_message).decode('utf-8')
-          body['raw'] = raw_message
-          current_batch_bytes += len(raw_message)
-          for labelId in labelIds:
-            current_batch_bytes += len(labelId)
-          if len(gbatch._order) > 0 and current_batch_bytes > max_batch_bytes:
-            # this message would put us over max, execute current batch first
-            rewrite_line("restoring %s messages (%s/%s)" %
-              (len(gbatch._order), current, restore_count))
-            callGAPI(gbatch, None, soft_errors=True)
-            gbatch = googleapiclient.http.BatchHttpRequest()
-            sqlconn.commit()
-            current_batch_bytes = 5000
-            largest_in_batch = 0
-          gbatch.add(restore_method(userId='me',
-            body=body, fields='id',
-            deleted=options.vault, **restore_params),
-            callback=restored_message,
-            request_id=request_id)
-          if len(gbatch._order) == options.batch_size:
-            rewrite_line("restoring %s messages (%s/%s)" %
-              (len(gbatch._order), current, restore_count))
-            callGAPI(gbatch, None, soft_errors=True)
-            gbatch = googleapiclient.http.BatchHttpRequest()
-            sqlconn.commit()
-            current_batch_bytes = 5000
-            largest_in_batch = 0
-        if len(gbatch._order) > 0:
-          rewrite_line("restoring %s messages (%s/%s)" %
-            (len(gbatch._order), current, restore_count))
-          callGAPI(gbatch, None, soft_errors=True)
-          sqlconn.commit()
-    sqlconn.execute('DETACH mbox_resume')
-    sqlconn.commit()
+  # elif options.action == 'restore-mbox':
+  #   if options.batch_size == 0:
+  #     options.batch_size = 10
+  #   resumedb = os.path.join(options.local_folder,
+  #                           "%s-restored.sqlite" % options.email)
+  #   if options.noresume:
+  #     try:
+  #       os.remove(resumedb)
+  #     except OSError:
+  #       pass
+  #     except IOError:
+  #       pass
+  #   sqlcur.execute('ATTACH ? as mbox_resume', (resumedb,))
+  #   sqlcur.executescript('''CREATE TABLE
+  #                       IF NOT EXISTS mbox_resume.restored_messages
+  #                       (message_num TEXT PRIMARY KEY)''')
+  #   sqlcur.execute('SELECT message_num FROM mbox_resume.restored_messages')
+  #   messages_to_skip_results = sqlcur.fetchall()
+  #   messages_to_skip = []
+  #   for a_message in messages_to_skip_results:
+  #     messages_to_skip.append(a_message[0])
+  #   current_batch_bytes = 5000
+  #   gbatch = googleapiclient.http.BatchHttpRequest()
+  #   restore_serv = gmail.users().messages()
+  #   if options.fast_restore:
+  #     restore_func = 'insert'
+  #     restore_params = {'internalDateSource': 'dateHeader'}
+  #   else:
+  #     restore_func = 'import_'
+  #     restore_params = {'neverMarkSpam': True}
+  #   restore_method = getattr(restore_serv, restore_func)
+  #   max_batch_bytes = 8 * 1024 * 1024
+  #   for path, subdirs, files in os.walk(options.local_folder):
+  #     for filename in files:
+  #       if filename[-4:].lower() != '.mbx' and \
+  #         filename[-5:].lower() != '.mbox':
+  #         continue
+  #       file_path = '%s%s%s' % (path, path_divider, filename)
+  #       print("\nRestoring from %s file %s..." % (humansize(file_path), file_path))
+  #       print("large files may take some time to open.")
+  #       mbox = mailbox.mbox(file_path)
+  #       restore_count = len(list(mbox.items()))
+  #       current = 0
+  #       for message in mbox:
+  #         current += 1
+  #         message_marker = '%s-%s' % (file_path, current)
+  #         # shorten request_id to prevent content-id errors
+  #         request_id = hashlib.md5(message_marker.encode('utf-8')).hexdigest()[:25]
+  #         if request_id in messages_to_skip:
+  #           continue
+  #         labels = message['X-Gmail-Labels']
+  #         if labels != None and labels != '' and not options.strip_labels:
+  #           mybytes, encoding = email.header.decode_header(labels)[0]
+  #           if encoding != None:
+  #             try:
+  #               labels = mybytes.decode(encoding)
+  #             except UnicodeDecodeError:
+  #               pass
+  #           labels = labels.split(',')
+  #         else:
+  #           labels = []
+  #         if options.label_restored:
+  #           for restore_label in options.label_restored:
+  #             labels.append(restore_label)
+  #         cased_labels = []
+  #         for label in labels:
+  #           if label.lower() in reserved_labels:
+  #             label = label.upper()
+  #             if label in ['CHAT', 'CHATS']:
+  #               cased_labels.append('Chats_restored')
+  #               continue
+  #             if label == 'DRAFTS':
+  #               label = u'DRAFT'
+  #             cased_labels.append(label)
+  #           else:
+  #             cased_labels.append(label)
+  #         labelIds = labelsToLabelIds(cased_labels)
+  #         del message['X-Gmail-Labels']
+  #         del message['X-GM-THRID']
+  #         rewrite_line(" message %s of %s" % (current, restore_count))
+  #         full_message = message.as_bytes()
+  #         body = {'labelIds': labelIds}
+  #         b64_message_size = (len(full_message)/3) * 4
+  #         if b64_message_size > 1 * 1024 * 1024:
+  #           # don't batch/raw >1mb messages, just do single
+  #           rewrite_line(' restoring single large message (%s/%s)' %
+  #             (current, restore_count))
+  #           media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
+  #             mimetype='message/rfc822', resumable=True, chunksize=chunksize)
+  #           try:
+  #             response = callGAPI(service=restore_serv, function=restore_func,
+  #               userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
+  #               deleted=options.vault, soft_errors=True, **restore_params)
+  #             if response == None:
+  #               continue
+  #             exception = None
+  #           except googleapiclient.errors.HttpError as e:
+  #             response = None
+  #             exception = e
+  #           restored_message(request_id=request_id, response=response,
+  #             exception=None)
+  #           rewrite_line(' restored single large message (%s/%s)' %
+  #             (current, restore_count))
+  #           continue
+  #         raw_message = base64.urlsafe_b64encode(full_message).decode('utf-8')
+  #         body['raw'] = raw_message
+  #         current_batch_bytes += len(raw_message)
+  #         for labelId in labelIds:
+  #           current_batch_bytes += len(labelId)
+  #         if len(gbatch._order) > 0 and current_batch_bytes > max_batch_bytes:
+  #           # this message would put us over max, execute current batch first
+  #           rewrite_line("restoring %s messages (%s/%s)" %
+  #             (len(gbatch._order), current, restore_count))
+  #           callGAPI(gbatch, None, soft_errors=True)
+  #           gbatch = googleapiclient.http.BatchHttpRequest()
+  #           sqlconn.commit()
+  #           current_batch_bytes = 5000
+  #           largest_in_batch = 0
+  #         gbatch.add(restore_method(userId='me',
+  #           body=body, fields='id',
+  #           deleted=options.vault, **restore_params),
+  #           callback=restored_message,
+  #           request_id=request_id)
+  #         if len(gbatch._order) == options.batch_size:
+  #           rewrite_line("restoring %s messages (%s/%s)" %
+  #             (len(gbatch._order), current, restore_count))
+  #           callGAPI(gbatch, None, soft_errors=True)
+  #           gbatch = googleapiclient.http.BatchHttpRequest()
+  #           sqlconn.commit()
+  #           current_batch_bytes = 5000
+  #           largest_in_batch = 0
+  #       if len(gbatch._order) > 0:
+  #         rewrite_line("restoring %s messages (%s/%s)" %
+  #           (len(gbatch._order), current, restore_count))
+  #         callGAPI(gbatch, None, soft_errors=True)
+  #         sqlconn.commit()
+  #   sqlconn.execute('DETACH mbox_resume')
+  #   sqlconn.commit()
 
   # RESTORE-GROUP #
-  elif options.action == 'restore-group':
-    if not options.service_account:  # 3-Legged OAuth
-      gmig = buildGAPIObject('groupsmigration')
-    else:
-      gmig = buildGAPIServiceObject('groupsmigration')
-    resumedb = os.path.join(options.local_folder,
-                            "%s-restored.sqlite" % options.email)
-    if options.noresume:
-      try:
-        os.remove(resumedb)
-      except OSError:
-        pass
-      except IOError:
-        pass
-    sqlcur.execute('ATTACH ? as resume', (resumedb,))
-    sqlcur.executescript('''CREATE TABLE IF NOT EXISTS resume.restored_messages
-                      (message_num INTEGER PRIMARY KEY);
-       CREATE TEMP TABLE skip_messages (message_num INTEGER PRIMARY KEY);''')
-    sqlcur.execute('''INSERT INTO skip_messages SELECT message_num
-      FROM restored_messages''')
-    sqlcur.execute('''SELECT message_num, message_internaldate,
-      message_filename FROM messages
-          WHERE message_num NOT IN skip_messages
-            ORDER BY message_internaldate DESC''')
-    messages_to_restore_results = sqlcur.fetchall()
-    restore_count = len(messages_to_restore_results)
-    current = 0
-    for x in messages_to_restore_results:
-      current += 1
-      rewrite_line("restoring message %s of %s from %s" %
-        (current, restore_count, x[1]))
-      message_num = x[0]
-      message_filename = x[2]
-      if not os.path.isfile(os.path.join(options.local_folder,
-        message_filename)):
-        print('WARNING! file %s does not exist for message %s' %
-          (os.path.join(options.local_folder, message_filename), message_num))
-        print('  this message will be skipped.')
-        continue
-      f = open(os.path.join(options.local_folder, message_filename), 'rb')
-      full_message = f.read()
-      f.close()
-      media = googleapiclient.http.MediaFileUpload(
-        os.path.join(options.local_folder, message_filename),
-        mimetype='message/rfc822', resumable=True, chunksize=chunksize)
-      try:
-        callGAPI(service=gmig.archive(), function='insert',
-          groupId=options.email, media_body=media, soft_errors=True)
-      except googleapiclient.errors.MediaUploadSizeError as e:
-        print('\n ERROR: Message is to large for groups (16mb limit). \
-          Skipping...')
-        continue
-      sqlconn.execute(
-         'INSERT OR IGNORE INTO restored_messages (message_num) VALUES (?)',
-           (message_num,))
-      sqlconn.commit()
-    sqlconn.execute('DETACH resume')
-    sqlconn.commit()
+  # elif options.action == 'restore-group':
+  #   if not options.service_account:  # 3-Legged OAuth
+  #     gmig = buildGAPIObject('groupsmigration')
+  #   else:
+  #     gmig = buildGAPIServiceObject('groupsmigration')
+  #   resumedb = os.path.join(options.local_folder,
+  #                           "%s-restored.sqlite" % options.email)
+  #   if options.noresume:
+  #     try:
+  #       os.remove(resumedb)
+  #     except OSError:
+  #       pass
+  #     except IOError:
+  #       pass
+  #   sqlcur.execute('ATTACH ? as resume', (resumedb,))
+  #   sqlcur.executescript('''CREATE TABLE IF NOT EXISTS resume.restored_messages
+  #                     (message_num INTEGER PRIMARY KEY);
+  #      CREATE TEMP TABLE skip_messages (message_num INTEGER PRIMARY KEY);''')
+  #   sqlcur.execute('''INSERT INTO skip_messages SELECT message_num
+  #     FROM restored_messages''')
+  #   sqlcur.execute('''SELECT message_num, message_internaldate,
+  #     message_filename FROM messages
+  #         WHERE message_num NOT IN skip_messages
+  #           ORDER BY message_internaldate DESC''')
+  #   messages_to_restore_results = sqlcur.fetchall()
+  #   restore_count = len(messages_to_restore_results)
+  #   current = 0
+  #   for x in messages_to_restore_results:
+  #     current += 1
+  #     rewrite_line("restoring message %s of %s from %s" %
+  #       (current, restore_count, x[1]))
+  #     message_num = x[0]
+  #     message_filename = x[2]
+  #     if not os.path.isfile(os.path.join(options.local_folder,
+  #       message_filename)):
+  #       print('WARNING! file %s does not exist for message %s' %
+  #         (os.path.join(options.local_folder, message_filename), message_num))
+  #       print('  this message will be skipped.')
+  #       continue
+  #     f = open(os.path.join(options.local_folder, message_filename), 'rb')
+  #     full_message = f.read()
+  #     f.close()
+  #     media = googleapiclient.http.MediaFileUpload(
+  #       os.path.join(options.local_folder, message_filename),
+  #       mimetype='message/rfc822', resumable=True, chunksize=chunksize)
+  #     try:
+  #       callGAPI(service=gmig.archive(), function='insert',
+  #         groupId=options.email, media_body=media, soft_errors=True)
+  #     except googleapiclient.errors.MediaUploadSizeError as e:
+  #       print('\n ERROR: Message is to large for groups (16mb limit). \
+  #         Skipping...')
+  #       continue
+  #     sqlconn.execute(
+  #        'INSERT OR IGNORE INTO restored_messages (message_num) VALUES (?)',
+  #          (message_num,))
+  #     sqlconn.commit()
+  #   sqlconn.execute('DETACH resume')
+  #   sqlconn.commit()
 
-  # COUNT 
+  # COUNT
   elif options.action == 'count':
     if options.batch_size == 0:
       options.batch_size = 100
@@ -1577,7 +1595,7 @@ if __name__ == '__main__':
   if sys.version_info[0] < 3 or sys.version_info[1] < 5:
     print('ERROR: GYB requires Python 3.5 or greater.')
     sys.exit(3)
-  doGYBCheckForUpdates()
+  #doGYBCheckForUpdates()
   try:
     main(sys.argv[1:])
   except KeyboardInterrupt:
